@@ -3,12 +3,18 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
+/**
+ * Interface representativa de um item consumido no frigobar ou serviço avulso.
+ */
 export interface Consumo {
   id: number;
   descricao: string;
   valor: string | number;
 }
 
+/**
+ * Contrato de dados principal para entrada/edição de uma hospedagem.
+ */
 export interface HospedagemData {
   nomeHospede: string;
   telefone: string;
@@ -28,15 +34,28 @@ export interface HospedagemData {
   saldoPagar?: number;
 }
 
+/**
+ * Propriedades aceitas pelo componente de formulário reutilizável.
+ */
 interface HospedagemFormProps {
   initialData?: HospedagemData;
   onSubmit: (formData: HospedagemData) => Promise<void>;
   isSubmitting?: boolean;
 }
 
+/**
+ * Formulário Reutilizável de Hospedagem (Check-in & Edição)
+ * 
+ * Centraliza toda a lógica de entrada de dados de estadias, incluindo:
+ * - Adição e remoção dinâmica de itens de frigobar;
+ * - Cálculo automático de noites/diárias a partir do período selecionado;
+ * - Totalização financeira em tempo real (diárias + consumo - adiantamentos);
+ * - Alternância entre os estados 'Aberta' e 'Fechada' da comanda.
+ */
 export function EventoForm({ initialData, onSubmit, isSubmitting = false }: HospedagemFormProps) {
   const router = useRouter();
 
+  // Estado local do formulário com inicialização padrão
   const [formData, setFormData] = useState<HospedagemData>({
     nomeHospede: "",
     telefone: "",
@@ -51,6 +70,10 @@ export function EventoForm({ initialData, onSubmit, isSubmitting = false }: Hosp
     observacoes: ""
   });
 
+  /**
+   * Efeito disparado para preencher o formulário caso dados iniciais
+   * sejam fornecidos (modo de edição de hospedagem já existente).
+   */
   useEffect(() => {
     if (initialData) {
       setFormData({
@@ -71,24 +94,40 @@ export function EventoForm({ initialData, onSubmit, isSubmitting = false }: Hosp
     }
   }, [initialData]);
 
+  /**
+   * Sanitiza entradas de texto para números flutuantes válidos,
+   * lidando com pontuações e padrão de vírgula brasileiro (pt-BR).
+   */
   const parseCurrency = (value: string | number) => {
     if (!value) return 0;
     const parsed = parseFloat(value.toString().replace(/[^0-9,.-]+/g, "").replace(",", "."));
     return isNaN(parsed) ? 0 : parsed;
   };
 
+  /**
+   * Formata valores numéricos para o padrão monetário Real (R$).
+   */
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
   };
 
+  /**
+   * Handler genérico para inputs de texto e áreas de observação.
+   */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  /**
+   * Alterna o estado da comanda entre Aberta e Fechada.
+   */
   const handleStatusConta = (status: "Aberta" | "Fechada") => {
     setFormData({ ...formData, statusConta: status });
   };
 
+  /**
+   * Atualiza dinamicamente a descrição ou o valor de um item específico do frigobar.
+   */
   const handleConsumoChange = (id: number, field: keyof Consumo, value: string) => {
     setFormData(prev => ({
       ...prev,
@@ -96,6 +135,9 @@ export function EventoForm({ initialData, onSubmit, isSubmitting = false }: Hosp
     }));
   };
 
+  /**
+   * Adiciona uma nova linha em branco para lançamento de consumo extra.
+   */
   const addConsumo = () => {
     setFormData(prev => ({
       ...prev,
@@ -103,6 +145,9 @@ export function EventoForm({ initialData, onSubmit, isSubmitting = false }: Hosp
     }));
   };
 
+  /**
+   * Remove uma linha de consumo da comanda pelo identificador único.
+   */
   const removeConsumo = (id: number) => {
     setFormData(prev => ({
       ...prev,
@@ -110,6 +155,10 @@ export function EventoForm({ initialData, onSubmit, isSubmitting = false }: Hosp
     }));
   };
 
+  /**
+   * Calcula a quantidade de diárias baseando-se na diferença entre check-in e check-out.
+   * Por padrão, garante no mínimo 1 diária caso as datas coincidam ou sejam inválidas.
+   */
   const calcularDias = () => {
     if (!formData.dataCheckIn || !formData.dataCheckOut) return 1;
     const inicio = new Date(formData.dataCheckIn);
@@ -119,6 +168,7 @@ export function EventoForm({ initialData, onSubmit, isSubmitting = false }: Hosp
     return diffDias > 0 ? diffDias : 1;
   };
 
+  // Cálculos reativos atualizados a cada renderização do formulário
   const diasEstadia = calcularDias();
   const diariaNum = parseCurrency(formData.valorDiaria);
   const totalDiarias = diasEstadia * diariaNum;
@@ -127,6 +177,9 @@ export function EventoForm({ initialData, onSubmit, isSubmitting = false }: Hosp
   const adiantamentoNum = parseCurrency(formData.adiantamento);
   const saldoPagar = totalGeral - adiantamentoNum;
 
+  /**
+   * Consolida todos os dados preenchidos e valores calculados antes de disparar o onSubmit.
+   */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit({
@@ -143,7 +196,7 @@ export function EventoForm({ initialData, onSubmit, isSubmitting = false }: Hosp
     <div className="flex flex-col flex-1 items-center justify-center font-sans bg-gradient-to-br from-[#fffbeb] via-[#fef3c7] to-[#ecfdf5] min-h-screen py-8 px-4 sm:px-6 text-slate-800">
       <main className="flex w-full max-w-3xl flex-col px-6 py-8 md:p-10 bg-white/90 backdrop-blur-md rounded-3xl border border-amber-200 shadow-xl">
         
-        {/* Cabeçalho */}
+        {/* Cabeçalho de Navegação e Título Dinâmico */}
         <div className="flex items-center justify-between mb-8 pb-4 border-b border-amber-200">
           <button
             onClick={() => router.back()}
@@ -160,7 +213,7 @@ export function EventoForm({ initialData, onSubmit, isSubmitting = false }: Hosp
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-8">
           
-          {/* Dados do Hóspede */}
+          {/* Seção 1: Identificação e Contato do Hóspede */}
           <section className="flex flex-col gap-4">
             <h2 className="text-[#0f766e] text-sm md:text-base font-bold flex items-center gap-2 border-b border-amber-100 pb-2">
               👤 Dados do Hóspede
@@ -206,7 +259,7 @@ export function EventoForm({ initialData, onSubmit, isSubmitting = false }: Hosp
             </div>
           </section>
 
-          {/* Quarto & Datas */}
+          {/* Seção 2: Atribuição de Acomodação e Período */}
           <section className="flex flex-col gap-4">
             <h2 className="text-[#0f766e] text-sm md:text-base font-bold flex items-center gap-2 border-b border-amber-100 pb-2">
               🛏️ Quarto & Período de Estadia
@@ -252,7 +305,7 @@ export function EventoForm({ initialData, onSubmit, isSubmitting = false }: Hosp
             </div>
           </section>
 
-          {/* Consumos do Frigobar */}
+          {/* Seção 3: Itens de Frigobar e Consumo Extra */}
           <section className="flex flex-col gap-4 bg-amber-50/60 p-5 rounded-2xl border border-amber-200">
             <div className="flex justify-between items-center">
               <h2 className="text-[#0f766e] text-sm md:text-base font-bold flex items-center gap-2">
@@ -297,7 +350,7 @@ export function EventoForm({ initialData, onSubmit, isSubmitting = false }: Hosp
             </div>
           </section>
 
-          {/* Diárias & Pagamentos */}
+          {/* Seção 4: Valores da Hospedagem, Sinal e Status da Conta */}
           <section className="flex flex-col gap-4">
             <h2 className="text-[#0f766e] text-sm md:text-base font-bold flex items-center gap-2 border-b border-amber-100 pb-2">
               💳 Valores & Pagamento
@@ -328,6 +381,7 @@ export function EventoForm({ initialData, onSubmit, isSubmitting = false }: Hosp
                 />
               </div>
 
+              {/* Botões de Alternância do Status da Conta */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-semibold text-slate-600">Status da Conta</label>
                 <div className="flex gap-2">
@@ -358,7 +412,7 @@ export function EventoForm({ initialData, onSubmit, isSubmitting = false }: Hosp
             </div>
           </section>
 
-          {/* Observações */}
+          {/* Seção 5: Observações da Estadia */}
           <section className="flex flex-col gap-2">
             <h2 className="text-[#0f766e] text-sm md:text-base font-bold flex items-center gap-2 border-b border-amber-100 pb-2">
               📝 Observações da Estadia
@@ -373,7 +427,7 @@ export function EventoForm({ initialData, onSubmit, isSubmitting = false }: Hosp
             />
           </section>
 
-          {/* Resumo da Conta */}
+          {/* Painel de Resumo Financeiro Consolidado */}
           <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex flex-col md:flex-row justify-between gap-4 shadow-sm">
             <div className="flex flex-col">
               <span className="text-xs font-semibold text-slate-500 mb-1">
@@ -390,6 +444,7 @@ export function EventoForm({ initialData, onSubmit, isSubmitting = false }: Hosp
             </div>
           </div>
 
+          {/* Botão de Envio com Estado de Carregamento */}
           <div>
             <button
               type="submit"

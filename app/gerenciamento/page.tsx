@@ -13,12 +13,18 @@ import {
 } from "firebase/firestore";
 import { db } from "@/app/lib/firebase";
 
+/**
+ * Interface representativa de um consumo individual vinculado à estadia.
+ */
 interface Consumo {
   id: number;
   descricao: string;
   valor: string | number;
 }
 
+/**
+ * Interface dos dados de hospedagem recuperados do Firestore.
+ */
 interface Hospedagem {
   id: string;
   nomeHospede: string;
@@ -38,16 +44,32 @@ interface Hospedagem {
   observacoes?: string;
 }
 
+/**
+ * Painel de Gerenciamento de Quartos e Hospedagens
+ * 
+ * Atua como o centro de operações do balcão:
+ * - Lista todas as estadias ativas/passadas ordenadas por data de criação;
+ * - Permite alternar rapidamente o status da conta (Em Aberto / Fechada);
+ * - Abre modal para lançamento rápido de itens consumidos no frigobar;
+ * - Recalcula e persiste saldos a pagar diretamente no Cloud Firestore.
+ */
 export default function GerenciamentoPousada() {
   const router = useRouter();
+  
+  // Estado principal contendo os registros de hospedagem
   const [hospedagens, setHospedagens] = useState<Hospedagem[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Estados de controle do Modal de Consumo Rápido
   const [selectedHospedagem, setSelectedHospedagem] = useState<Hospedagem | null>(null);
   const [descConsumo, setDescConsumo] = useState("");
   const [valorConsumo, setValorConsumo] = useState("");
   const [savingConsumo, setSavingConsumo] = useState(false);
 
+  /**
+   * Busca todas as hospedagens cadastradas no Firestore,
+   * ordenando pelas mais recentes (createdAt desc).
+   */
   const fetchHospedagens = async () => {
     try {
       const q = query(collection(db, "hospedagens"), orderBy("createdAt", "desc"));
@@ -66,26 +88,39 @@ export default function GerenciamentoPousada() {
     }
   };
 
+  // Carrega os dados na montagem do componente
   useEffect(() => {
     fetchHospedagens();
   }, []);
 
+  /**
+   * Converte strings de moeda formatada para tipo numérico float.
+   */
   const parseNumber = (val: string | number | undefined) => {
     if (!val) return 0;
     const parsed = parseFloat(val.toString().replace(/[^0-9,.-]+/g, "").replace(",", "."));
     return isNaN(parsed) ? 0 : parsed;
   };
 
+  /**
+   * Formata números para moeda brasileira (R$).
+   */
   const formatCurrency = (value: number | undefined) => {
     return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value || 0);
   };
 
+  /**
+   * Converte datas do formato ISO/HTML (AAAA-MM-DD) para padrão brasileiro (DD/MM/AAAA).
+   */
   const formatDate = (dateString: string) => {
     if (!dateString) return "";
     const [year, month, day] = dateString.split("-");
     return `${day}/${month}/${year}`;
   };
 
+  /**
+   * Remove o registro da hospedagem do banco de dados e da interface local.
+   */
   const handleDelete = async (id: string) => {
     if (confirm("Tem certeza que deseja excluir esta hospedagem?")) {
       try {
@@ -98,12 +133,16 @@ export default function GerenciamentoPousada() {
     }
   };
 
+  /**
+   * Alterna de forma atômica o status da conta entre 'Aberta' e 'Fechada'.
+   */
   const handleAlternarStatus = async (item: Hospedagem) => {
     const novoStatus: "Aberta" | "Fechada" = item.statusConta === "Aberta" ? "Fechada" : "Aberta";
     try {
       await updateDoc(doc(db, "hospedagens", item.id), {
         statusConta: novoStatus,
       });
+      // Atualização otimista no estado local
       setHospedagens((prev) =>
         prev.map((h) => (h.id === item.id ? { ...h, statusConta: novoStatus } : h))
       );
@@ -113,6 +152,10 @@ export default function GerenciamentoPousada() {
     }
   };
 
+  /**
+   * Registra um novo item de consumo para a hospedagem selecionada,
+   * recalculando instantaneamente o total de consumo, total geral e saldo devedor.
+   */
   const handleAddConsumoRapido = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedHospedagem || !descConsumo || !valorConsumo) return;
@@ -125,6 +168,7 @@ export default function GerenciamentoPousada() {
         valor: valorConsumo,
       };
 
+      // Atualização dos arrays de consumo e recálculo financeiro consolidado
       const consumosAtualizados = [...(selectedHospedagem.consumos || []), novoItem];
       const novoTotalConsumo = consumosAtualizados.reduce((acc, c) => acc + parseNumber(c.valor), 0);
       const totalDiarias = Number(selectedHospedagem.totalDiarias || 0);
@@ -132,6 +176,7 @@ export default function GerenciamentoPousada() {
       const novoTotalGeral = totalDiarias + novoTotalConsumo;
       const novoSaldoPagar = novoTotalGeral - adiantamento;
 
+      // Persistência das métricas atualizadas no Firestore
       await updateDoc(doc(db, "hospedagens", selectedHospedagem.id), {
         consumos: consumosAtualizados,
         totalConsumo: novoTotalConsumo,
@@ -139,6 +184,7 @@ export default function GerenciamentoPousada() {
         saldoPagar: novoSaldoPagar,
       });
 
+      // Reflete as novas métricas na interface do usuário
       setHospedagens((prev) =>
         prev.map((h) =>
           h.id === selectedHospedagem.id
@@ -153,6 +199,7 @@ export default function GerenciamentoPousada() {
         )
       );
 
+      // Fecha e limpa o modal
       setSelectedHospedagem(null);
       setDescConsumo("");
       setValorConsumo("");
@@ -168,7 +215,7 @@ export default function GerenciamentoPousada() {
     <div className="flex flex-col flex-1 items-center font-sans bg-gradient-to-br from-[#fffbeb] via-[#fef3c7] to-[#ecfdf5] min-h-screen py-8 px-4 sm:px-6 text-slate-800">
       <main className="flex w-full max-w-5xl flex-col px-6 py-8 md:p-10 bg-white/85 backdrop-blur-md rounded-3xl border border-amber-200 shadow-xl">
         
-        {/* Cabeçalho */}
+        {/* Cabeçalho de Navegação e Ações Rápidas */}
         <div className="flex items-center justify-between mb-8 pb-5 border-b border-amber-200">
           <button
             onClick={() => router.push("/")}
@@ -185,7 +232,7 @@ export default function GerenciamentoPousada() {
           </button>
         </div>
 
-        {/* Lista de Hospedagens */}
+        {/* Grade de Listagem dos Quartos */}
         {loading ? (
           <div className="flex justify-center py-10 text-amber-900/60 font-medium">Carregando quartos...</div>
         ) : hospedagens.length === 0 ? (
@@ -200,6 +247,7 @@ export default function GerenciamentoPousada() {
                 key={hosp.id}
                 className="bg-amber-50/60 border border-amber-200/90 rounded-2xl p-5 flex flex-col gap-4 hover:border-amber-400 hover:shadow-md transition-all"
               >
+                {/* Identificação do Quarto, Hóspede e Status */}
                 <div className="flex justify-between items-start gap-2">
                   <div className="flex flex-col">
                     <span className="text-[11px] uppercase font-bold text-amber-700 tracking-wider">Quarto</span>
@@ -208,6 +256,7 @@ export default function GerenciamentoPousada() {
                     <span className="text-xs text-slate-500">📞 {hosp.telefone}</span>
                   </div>
 
+                  {/* Botão de Toggle do Status da Comanda */}
                   <button
                     onClick={() => handleAlternarStatus(hosp)}
                     title="Clique para alternar status"
@@ -221,12 +270,14 @@ export default function GerenciamentoPousada() {
                   </button>
                 </div>
 
+                {/* Período da Estadia */}
                 <div className="text-xs text-slate-600 flex items-center gap-2 bg-white/70 p-2.5 rounded-xl border border-amber-100 font-medium">
                   <span>📅 Entrada: {formatDate(hosp.dataCheckIn)}</span>
                   <span>•</span>
                   <span>Saída: {formatDate(hosp.dataCheckOut)}</span>
                 </div>
 
+                {/* Resumo Financeiro da Comanda */}
                 <div className="bg-white/80 rounded-xl p-3.5 border border-amber-100 flex flex-col gap-1.5 text-xs">
                   <div className="flex justify-between text-slate-500">
                     <span>Consumos Extras:</span>
@@ -244,6 +295,7 @@ export default function GerenciamentoPousada() {
                   </div>
                 </div>
 
+                {/* Ações: Lançamento de Consumo e Exclusão */}
                 <div className="grid grid-cols-2 gap-2 mt-1">
                   <button
                     onClick={() => setSelectedHospedagem(hosp)}
@@ -264,7 +316,7 @@ export default function GerenciamentoPousada() {
         )}
       </main>
 
-      {/* Modal Adicionar Consumo */}
+      {/* Modal para Inserção Rápida de Consumo Extra */}
       {selectedHospedagem && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white border border-amber-200 rounded-3xl p-6 w-full max-w-md text-slate-800 shadow-2xl">
