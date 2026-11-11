@@ -15,9 +15,18 @@ export default function Home() {
   const router = useRouter();
 
   return (
-    <div className="flex flex-col min-h-screen items-center justify-center font-sans bg-gradient-to-br from-[#fffbeb] via-[#fef3c7] to-[#ecfdf5] text-slate-800 px-4 sm:px-6">
-      {/* Card principal com efeito glassmorphism (vidro fosco) e paleta temática litorânea */}
-      <main className="flex w-full max-w-xl flex-col items-center py-10 px-6 sm:px-10 bg-white/80 backdrop-blur-md rounded-3xl border border-amber-200/80 shadow-2xl transition-all">
+    <div 
+      className="relative flex flex-col min-h-screen items-center justify-center font-sans bg-cover bg-center bg-no-repeat text-slate-800 px-4 sm:px-6"
+      style={{ backgroundImage: "url('/bg-pousada.jpg')" }}
+    >
+      {/* 
+        Overlay com escurecimento sutil e blur no fundo:
+        Garante contraste com o card central e valoriza o visual litorâneo
+      */}
+      <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px]" />
+
+      {/* Card principal com efeito glassmorphism (vidro fosco) */}
+      <main className="relative z-10 flex w-full max-w-xl flex-col items-center py-10 px-6 sm:px-10 bg-white/90 backdrop-blur-md rounded-3xl border border-white/60 shadow-2xl transition-all">
 
         {/* Identidade Visual / Cabeçalho da Pousada */}
         <div className="flex flex-col items-center text-center mb-6">
@@ -78,7 +87,7 @@ export default function Home() {
         </div>
 
         {/* Rodapé Dinâmico */}
-        <div className="mt-8 text-center text-xs font-semibold text-emerald-800/60">
+        <div className="mt-8 text-center text-xs font-semibold text-emerald-800/70">
           Pousada Espaço Litoral © {new Date().getFullYear()}
         </div>
 
