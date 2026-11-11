@@ -13,8 +13,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "IGLA Eventos",
-  description: "Gerenciamento de eventos e custos da IGLA",
+  title: "Pousada EL",
+  description: "Controle da Pousada Espaço Litoral",
+  icons: {
+    icon: "/logo-pousada",
+    shortcut: "/logo-pousada",
+    apple: "/logo-pousada",
+  },
 };
 
 export default function RootLayout({
