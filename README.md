@@ -1,57 +1,48 @@
-# Sistema de Controle e Gestão de Eventos
+# 🏨 Sistema de Gestão e Controle — Pousada Espaço Litoral
 
-> **Tipo de Projeto:** Solução Web sob medida para cliente / negócio local  
-> **Status:** Concluído / Entregue (Acesso restrito ao cliente)  
-> **Repositório:** [github.com/Nano2001nano/controle_eventos](https://github.com/Nano2001nano/controle_eventos)
-
----
-
-### 📌 Contexto do Projeto
-Esta aplicação foi desenvolvida e entregue sob medida para atender às necessidades operacionais de um cliente local no setor de eventos, centralizando a gestão de público, organização de escalas e validação de acessos.
+> **Tipo de Projeto:** Aplicação Web Full Stack sob medida  
+> **Status:** Concluído / Em Produção  
+> **Deploy:** [pousada-espaco-litoral.vercel.app](https://pousada-espaco-litoral.vercel.app)  
+> **Desenvolvedor:** Caetano Neto
 
 ---
 
-### 🎯 O Desafio do Negócio
-A gestão operacional de eventos frequentemente sofria com processos manuais, uso descentralizado de planilhas e mensagens de WhatsApp. O cliente enfrentava dificuldades como:
-- Falta de controle em tempo real sobre presença, escala de equipe e histórico de eventos.
-- Risco de inconsistência de dados e retrabalho na consolidação de relatórios pós-evento.
-- Lentidão na validação de acessos na portaria/recepção através de dispositivos móveis.
+## 📌 Contexto & Objetivo
+
+Sistema desenvolvido sob medida para digitalizar e centralizar a rotina operacional da **Pousada Espaço Litoral**. A aplicação elimina o controle manual em cadernos e planilhas descentralizadas, oferecendo uma interface ágil, intuitiva e totalmente responsiva para recepção, gerenciamento de quartos, consumo de frigobar e faturamento de estadias.
 
 ---
 
-### 💡 A Solução Desenvolvida
-Foi desenvolvida uma aplicação web responsiva, centralizada e de alta performance, projetada para uso tanto administrativo quanto operacional:
-- **Painel Administrativo:** Gestão completa de eventos, escalas, histórico e métricas de comparecimento.
-- **Operação Mobile-First:** Interface fluida para leitura rápida de dados na entrada do evento.
-- **Relatórios Automatizados:** Consolidação instantânea de presença e histórico operacional.
+## 🎯 Desafios Resolvidos
+
+* **Fim das anotações manuais:** Registro estruturado de entrada e saída de hóspedes sem risco de perda de comandas físicas.
+* **Controle de Frigobar e Consumo:** Lançamento direto de itens consumidos por quarto, calculando automaticamente subtotais em tempo real.
+* **Fechamento de Conta Ágil:** Consolidação instantânea de diárias + itens adicionais no momento do check-out.
+* **Acessibilidade Mobile-First:** Interface pensada para uso direto do balcão ou celular pela equipe da pousada.
 
 ---
 
-### 📸 Demonstração da Interface
+## 🚀 Funcionalidades Principais
 
-| Painel Principal | Gestão de Eventos |
-| :---: | :---: |
-| ![Dashboard](public/screenshots/pagina_inicial.png) | ![Eventos](public/screenshots/novo_evento.png) |
-
----
-
-### ⚙️ Stack Tecnológica & Arquitetura
-- **Core / Framework:** [Next.js](https://nextjs.org/) (React 19, TypeScript) com foco em velocidade e renderização otimizada.
-- **Estilização:** [Tailwind CSS v4](https://tailwindcss.com/) para interfaces responsivas, modernas e carregamento rápido.
-- **Backend as a Service & Auth:** [Firebase](https://firebase.google.com/) (Autenticação, Firestore para dados em tempo real e Storage).
-- **Comunicação & Mensageria:** [Resend](https://resend.com/) para disparos automatizados de e-mails transacionais e confirmações.
-- **Deploy & Infraestrutura:** Vercel com pipeline de CI/CD automatizado.
+* **Recepção / Check-in:** Entrada simplificada com dados do hóspede, quarto atribuído, data de entrada e previsão de saída.
+* **Gestão de Quartos e Ocupação:** Painel visual com status em tempo real de cada quarto (livre, ocupado, pendente de fechamento).
+* **Consumo em Aberto:** Adição de produtos, serviços e bebidas vinculados à estadia ativa.
+* **Check-out Automatizado:** Cálculo fechado de valores, diárias e recibo consolidado para acerto de contas.
 
 ---
 
-### 🏆 Desafios Técnicos Superados
-1. **Modelagem de Dados e Tempo Real:** Estruturação no Firestore para suportar múltiplos eventos simultâneos e consultas rápidas sem lentidão.
-2. **Controle de Acesso e Autenticação:** Implementação de regras de segurança no Firebase e rotas protegidas no Next.js para isolar permissões administrativas da equipe de apoio.
-3. **Performance Operacional:** Interface responsiva desenhada para resposta instantânea em redes móveis (3G/4G) durante a realização dos eventos.
+## 🛠️ Tecnologias Utilizadas
+
+* **Frontend / Framework:** Next.js (App Router), React, TypeScript
+* **Estilização:** Tailwind CSS (Paleta personalizada temática de verão: Sand, Amber & Emerald)
+* **Backend & Banco de Dados:** Firebase Firestore (Sincronização em tempo real)
+* **Hospedagem & CI/CD:** Vercel
 
 ---
 
-### 📈 Impacto & Resultados
-- ⏱️ **Redução de tempo operacional** no credenciamento e validação de acessos.
-- 📊 **Visibilidade de ponta a ponta** para a gestão do evento antes, durante e após a realização.
-- 📉 **Eliminação do retrabalho** com consolidação manual de planilhas.
+## 💻 Como Rodar Localmente
+
+1. Clone o repositório:
+```bash
+git clone [https://github.com/Nano2001nano/pousada-espaco-litoral.git](https://github.com/Nano2001nano/pousada-espaco-litoral.git)
+cd pousada-espaco-litoral
